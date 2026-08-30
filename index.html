@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>終極解密</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:linear-gradient(135deg,#10172a,#243b66);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+.game{width:min(680px,100%);background:rgba(10,15,30,.92);border:1px solid #ffffff22;border-radius:24px;padding:24px;box-shadow:0 20px 60px #0007}
+h1{text-align:center;margin:0 0 8px;font-size:34px}.sub{text-align:center;color:#b8c4df;margin-bottom:20px}
+.top{display:flex;justify-content:space-between;gap:10px;margin-bottom:18px}.pill{background:#ffffff12;padding:9px 13px;border-radius:999px}
+.card{background:#fff;color:#172033;border-radius:18px;padding:22px}.level{color:#52658f;font-weight:700}.question{font-size:25px;font-weight:800;line-height:1.45;margin:15px 0 20px}
+.answers{display:grid;gap:12px}.answers button,.restart{border:0;border-radius:13px;padding:14px;font-size:18px;font-weight:700;cursor:pointer;background:#e9eef8;color:#172033}.answers button:hover{background:#d8e2f5}.answers button:disabled{cursor:default}.correct{background:#b9efc5!important}.wrong{background:#ffc2c2!important}
+.message{text-align:center;min-height:30px;margin:16px 0;font-weight:800}.next,.restart{display:block;margin:0 auto;background:#5c7cfa;color:#fff;padding:13px 25px}.hidden{display:none}.result{text-align:center;padding:30px 10px}.score{font-size:48px;font-weight:900;margin:15px}
+</style>
+</head>
+<body>
+<div class="game">
+  <h1>🔐 終極解密</h1>
+  <div class="sub">動動腦筋，破解所有謎題！</div>
+  <div id="gameArea">
+    <div class="top">
+      <div class="pill">🧩 關卡 <span id="level">1</span>/10</div>
+      <div class="pill">❤️ <span id="lives">3</span></div>
+      <div class="pill">⭐ <span id="score">0</span></div>
+    </div>
+    <div class="card">
+      <div class="level">第 <span id="level2">1</span> 關</div>
+      <div class="question" id="question"></div>
+      <div class="answers" id="answers"></div>
+    </div>
+    <div class="message" id="message"></div>
+    <button class="next hidden" id="next">下一關 ➜</button>
+  </div>
+  <div id="result" class="result hidden">
+    <h2>🎉 解密完成！</h2>
+    <div class="score"><span id="finalScore">0</span> 分</div>
+    <p id="resultText"></p>
+    <button class="restart" onclick="restartGame()">再玩一次</button>
+  </div>
+</div>
+<script>
+const puzzles=[
+ {q:"3、6、12、24、？",a:["36","42","48","54"],c:2},
+ {q:"如果所有貓都是動物，而小黑是一隻貓，那麼小黑是？",a:["植物","動物","機器人","不知道"],c:1},
+ {q:"找出不同的一個： 2、4、8、16、31",a:["2","8","16","31"],c:3},
+ {q:"一個正方形有 4 個角。兩個正方形分開時共有幾個角？",a:["4","6","8","10"],c:2},
+ {q:"今天是星期三，3 天後是星期幾？",a:["星期四","星期五","星期六","星期日"],c:2},
+ {q:"密碼規律：1=A、2=B、3=C，那麼 4 代表？",a:["A","B","C","D"],c:3},
+ {q:"5 個人互相握手一次，每兩人只能握一次手，共握幾次？",a:["5","8","10","15"],c:2},
+ {q:"哪個數字最合理？ 1、1、2、3、5、8、？",a:["11","12","13","15"],c:2},
+ {q:"有 10 顆糖，拿走 3 顆，你手上有幾顆？",a:["3","7","10","13"],c:0},
+ {q:"最後一題：如果 A > B，B > C，那麼誰最小？",a:["A","B","C","無法判斷"],c:2}
+];
+let idx=0,lives=3,score=0,locked=false;
+const $=id=>document.getElementById(id);
+function render(){
+ locked=false;$("level").textContent=idx+1;$("level2").textContent=idx+1;$("lives").textContent=lives;$("score").textContent=score;
+ $("question").textContent=puzzles[idx].q;$("message").textContent="";$("next").classList.add("hidden");
+ const box=$("answers");box.innerHTML="";
+ puzzles[idx].a.forEach((x,i)=>{const b=document.createElement("button");b.textContent=x;b.onclick=()=>answer(i,b);box.appendChild(b)});
+}
+function answer(i,b){
+ if(locked)return;locked=true;
+ const p=puzzles[idx], buttons=[...$("answers").children];
+ if(i===p.c){score+=10;b.classList.add("correct");$("message").textContent="✅ 答對了！ +10 分";$("score").textContent=score}
+ else{lives--;b.classList.add("wrong");buttons[p.c].classList.add("correct");$("message").textContent="❌ 答錯了！正確答案是「"+p.a[p.c]+"」";$("lives").textContent=lives}
+ buttons.forEach(x=>x.disabled=true);
+ if(lives<=0){setTimeout(endGame,700);return}
+ $("next").classList.remove("hidden");
+}
+$("next").onclick=()=>{idx++; if(idx>=puzzles.length)endGame();else render()};
+function endGame(){
+ $("gameArea").classList.add("hidden");$("result").classList.remove("hidden");$("finalScore").textContent=score;
+ $("resultText").textContent=lives>0?"你成功破解全部 10 道謎題！":"生命用完了，再挑戰一次吧！";
+}
+function restartGame(){idx=0;lives=3;score=0;$("result").classList.add("hidden");$("gameArea").classList.remove("hidden");render()}
+render();
+</script>
+</body>
+</html>
